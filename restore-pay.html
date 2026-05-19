@@ -1,0 +1,1446 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>restore: × xPay — Чек-аут с Альфа-Банком</title>
+<meta name="description" content="Интерактивный прототип чек-аута restore: с xPay: оплата, частями, рассрочка и оформление карты через Альфа-Банк">
+<meta property="og:title" content="restore: × xPay — Чек-аут с Альфа-Банком">
+<meta property="og:description" content="Интерактивный прототип партнёрской интеграции xPay в restore:">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%230A0A0A'/><text x='50%25' y='62%25' text-anchor='middle' fill='%23FF5CB9' font-size='14' font-weight='800' font-family='Arial' letter-spacing='-1'>r:</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{background:#FAFAF7;color:#0A0A0A;-webkit-tap-highlight-color:transparent}
+body{font-family:'Inter','SF Pro Text','Segoe UI',-apple-system,sans-serif;-webkit-font-smoothing:antialiased;font-feature-settings:"ss01","cv11"}
+button{font-family:inherit;border:none;background:none;color:inherit;cursor:pointer}
+button:focus{outline:none}
+input{font-family:inherit}
+input:focus{outline:none}
+::selection{background:#FF5CB9;color:#FFFFFF}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-thumb{background:#D4D4D4;border-radius:3px}
+.num{font-variant-numeric:tabular-nums}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useEffect } = React;
+
+const C = {
+  accent: "#FF5CB9", accentDark: "#D43A99", accentSoft: "#F4C0D1", accentLight: "#FDF1F6",
+  dark: "#0A0A0A", darkDeep: "#000000",
+  cream: "#F5F5F3", creamDark: "#E8E8E5",
+  alfaRed: "#EF3124",
+  bg: "#FFFFFF", card: "#FFFFFF", text: "#0A0A0A", sub: "#737373", sub2: "#A3A3A3",
+  border: "#E5E5E5", borderSoft: "#EFEFEF",
+  green: "#0FA958", greenBg: "#E6F7EE",
+};
+
+/* ========== LOGO & CARDS ========== */
+
+function RestoreLogo({ size = 30, color = "#0A0A0A" }) {
+  const w = size * 3.4, h = size;
+  return (
+    <svg width={w} height={h} viewBox="0 0 102 30" style={{ display: "block" }}>
+      <text x="0" y="23" fontSize="24" fontWeight="800" fill={color} fontFamily="Inter, sans-serif" letterSpacing="-1.2">restore:</text>
+    </svg>
+  );
+}
+
+function XpayCardSvg({ width = 200, last = "8217" }) {
+  const h = Math.round(width * 0.6);
+  return (
+    <svg width={width} height={h} viewBox="0 0 200 120" style={{ borderRadius: 14, display: "block" }}>
+      <defs>
+        <linearGradient id="xpBg" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#1A1A1A"/>
+          <stop offset="100%" stopColor="#0A0A0A"/>
+        </linearGradient>
+      </defs>
+      <rect width="200" height="120" rx="14" fill="url(#xpBg)"/>
+      {/* accent blob */}
+      <circle cx="186" cy="-4" r="56" fill={C.accent} opacity="0.95"/>
+      <circle cx="22" cy="118" r="42" fill={C.accent} opacity="0.07"/>
+      {/* chip */}
+      <rect x="14" y="40" width="28" height="22" rx="4" fill="#2A2A2A"/>
+      <line x1="14" y1="51" x2="42" y2="51" stroke="#444" strokeWidth="1"/>
+      <line x1="28" y1="40" x2="28" y2="62" stroke="#444" strokeWidth="1"/>
+      {/* brand */}
+      <text x="14" y="82" fill="#fff" fontSize="13" fontWeight="800" fontFamily="Inter, sans-serif" letterSpacing="-0.3">restore:</text>
+      <text x="14" y="96" fill={C.accent} fontSize="9" fontWeight="700" fontFamily="Inter, sans-serif" letterSpacing="2">xPAY</text>
+      <text x="14" y="112" fill="rgba(255,255,255,0.7)" fontSize="10" fontFamily="monospace" fontWeight="600" letterSpacing="1.5">*{last}</text>
+      {/* МИР badge */}
+      <rect x="148" y="92" width="38" height="18" rx="4" fill="#fff"/>
+      <text x="167" y="105" fill={C.dark} fontSize="9" fontWeight="800" textAnchor="middle" fontFamily="Inter, sans-serif">МИР</text>
+    </svg>
+  );
+}
+
+function AlfaCardSvg({ width = 60, last = "1234" }) {
+  const h = Math.round(width * 0.6);
+  return (
+    <svg width={width} height={h} viewBox="0 0 200 120" style={{ borderRadius: 8, display: "block" }}>
+      <rect width="200" height="120" rx="8" fill="#0A0A0A"/>
+      <rect x="148" y="14" width="38" height="22" rx="4" fill={C.alfaRed}/>
+      <text x="167" y="29" fill="white" fontSize="12" fontWeight="800" textAnchor="middle">A</text>
+      <text x="14" y="108" fill="rgba(255,255,255,0.85)" fontSize="11" fontFamily="monospace" letterSpacing="2">*{last}</text>
+    </svg>
+  );
+}
+
+function SbpLogo({ size = 32 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 100 100" style={{ display: "block" }}>
+      <defs>
+        <linearGradient id="sbpg" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#1FB6FF"/>
+          <stop offset="50%" stopColor="#3D8EE6"/>
+          <stop offset="100%" stopColor="#7C5FE6"/>
+        </linearGradient>
+      </defs>
+      <circle cx="50" cy="50" r="48" fill="url(#sbpg)"/>
+      <text x="50" y="60" fill="#fff" fontWeight="800" fontSize="22" textAnchor="middle" fontFamily="Inter, sans-serif" letterSpacing="0.5">СБП</text>
+    </svg>
+  );
+}
+
+function QrCodeSvg({ size = 160, highlight }) {
+  const cells = [
+    [1,1,1,1,1,1,1,0,0,1,1,0,1,0,1,1,1,1,1,1,1],
+    [1,0,0,0,0,0,1,0,1,0,0,1,0,0,1,0,0,0,0,0,1],
+    [1,0,1,1,1,0,1,0,0,1,1,0,0,0,1,0,1,1,1,0,1],
+    [1,0,1,1,1,0,1,0,1,1,0,0,1,0,1,0,1,1,1,0,1],
+    [1,0,1,1,1,0,1,0,0,0,1,1,0,0,1,0,1,1,1,0,1],
+    [1,0,0,0,0,0,1,0,1,0,0,1,1,0,1,0,0,0,0,0,1],
+    [1,1,1,1,1,1,1,0,1,0,1,0,1,0,1,1,1,1,1,1,1],
+    [0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0],
+    [0,1,1,0,1,1,1,0,1,0,0,1,1,1,1,0,1,0,1,1,0],
+    [1,0,0,1,0,0,0,1,0,1,1,0,0,0,0,1,0,1,0,0,1],
+    [0,1,1,1,1,0,1,0,1,0,1,1,1,0,1,0,1,1,1,0,1],
+    [1,0,0,1,0,1,0,1,0,1,0,0,0,1,0,1,0,0,1,1,0],
+    [1,1,0,0,1,0,1,0,1,0,1,1,0,0,1,1,1,0,1,0,1],
+    [0,0,1,0,0,1,0,1,0,1,1,0,1,0,0,1,0,1,0,0,0],
+    [1,1,1,1,1,1,1,0,1,0,0,1,1,0,1,0,1,0,0,1,0],
+    [1,0,0,0,0,0,1,0,0,1,1,0,0,1,0,1,1,0,1,0,1],
+    [1,0,1,1,1,0,1,1,0,0,1,1,0,0,1,0,0,1,0,1,1],
+    [1,0,1,1,1,0,1,0,1,1,0,0,1,1,0,1,1,0,1,1,0],
+    [1,0,1,1,1,0,1,0,0,1,1,0,1,0,1,0,1,1,0,0,1],
+    [1,0,0,0,0,0,1,1,1,0,0,1,0,1,0,1,1,0,1,0,0],
+    [1,1,1,1,1,1,1,0,0,1,1,0,1,0,1,0,0,1,1,1,0],
+  ];
+  const n = cells.length;
+  const cell = size / n;
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+      <rect width={size} height={size} fill="white" rx="10"/>
+      {highlight && <rect width={size} height={size} rx="10" fill={C.accentLight}/>}
+      {cells.map((row, r) => row.map((v, c) =>
+        v ? <rect key={`${r}-${c}`} x={c*cell} y={r*cell} width={cell} height={cell} fill={highlight ? C.dark : "#1A1A1A"}/> : null
+      ))}
+      {highlight && (
+        <>
+          <rect width={size} height={size} rx="10" fill="none" stroke={C.dark} strokeWidth="2.5"/>
+          <rect x={size/2-26} y={size/2-12} width={52} height={24} rx={6} fill={C.accent}/>
+          <text x={size/2} y={size/2+5} textAnchor="middle" fontSize="11" fontWeight="800" fill={C.dark} fontFamily="Inter, sans-serif" letterSpacing="-0.3">restore:</text>
+        </>
+      )}
+    </svg>
+  );
+}
+
+/* ========== ICONS & PRIMITIVES ========== */
+
+function CheckIcon({ size = 16, color = "#fff" }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <path d="M5 12l5 5 9-9" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  );
+}
+function ChevronRight({ size = 16, color = C.sub }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <path d="M9 6l6 6-6 6" stroke={color} strokeWidth="2" strokeLinecap="round"/>
+    </svg>
+  );
+}
+function InfoIcon({ size = 14, color = C.sub }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <circle cx="12" cy="12" r="9" stroke={color} strokeWidth="1.5"/>
+      <path d="M12 8v1M12 12v4" stroke={color} strokeWidth="2" strokeLinecap="round"/>
+    </svg>
+  );
+}
+
+const Divider = ({ mx = 0 }) => <div style={{ height: 1, background: C.borderSoft, margin: `0 ${mx}px` }}/>;
+
+function PrimaryBtn({ label, sublabel, onClick, loading, secondary, disabled }) {
+  return (
+    <button onClick={onClick} disabled={loading || disabled} style={{
+      width: "100%", padding: "15px 20px", border: "none",
+      cursor: disabled ? "default" : "pointer", borderRadius: 14,
+      background: disabled ? "#E0E0E0" : secondary ? "#fff" : loading ? "#2A2A2A" : C.dark,
+      color: disabled ? C.sub : secondary ? C.dark : "#fff",
+      fontSize: 15, fontWeight: 700,
+      display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+      transition: "all .18s", fontFamily: "inherit", letterSpacing: "-0.2px",
+      boxShadow: secondary ? `inset 0 0 0 1.5px ${C.dark}` : disabled ? "none" : "0 4px 16px rgba(10,10,10,0.18)"
+    }}>
+      {loading ? "Обработка…" : label}
+      {sublabel && !loading && <span style={{ fontWeight: 500, fontSize: 13, opacity: 0.75 }}>· {sublabel}</span>}
+    </button>
+  );
+}
+
+function RadioRow({ selected, onClick, icon, title, sub, badge, badgeAccent }) {
+  return (
+    <div onClick={onClick} style={{
+      display: "flex", alignItems: "center", gap: 13,
+      padding: "13px 16px", cursor: "pointer",
+      background: selected ? C.accentLight : C.card,
+      borderLeft: `3px solid ${selected ? C.accent : "transparent"}`,
+      transition: "all .15s"
+    }}>
+      <div style={{
+        width: 42, height: 42, borderRadius: 12,
+        background: selected ? C.accent : C.bg,
+        display: "flex", alignItems: "center", justifyContent: "center",
+        fontSize: 20, flexShrink: 0
+      }}>{icon}</div>
+      <div style={{ flex: 1 }}>
+        <div style={{ fontSize: 14, fontWeight: 700, color: C.dark, letterSpacing: "-0.2px" }}>{title}</div>
+        {sub && <div style={{ fontSize: 12, color: C.sub, marginTop: 1 }}>{sub}</div>}
+      </div>
+      {badge && (
+        <span style={{
+          fontSize: 11, fontWeight: 800, padding: "3px 8px", borderRadius: 8,
+          background: badgeAccent ? C.accent : C.greenBg,
+          color: badgeAccent ? C.dark : C.green
+        }}>{badge}</span>
+      )}
+      <div style={{
+        width: 22, height: 22, borderRadius: "50%",
+        border: `2px solid ${selected ? C.dark : "#CCC"}`,
+        background: selected ? C.dark : "transparent",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        flexShrink: 0, transition: "all .15s"
+      }}>
+        {selected && <CheckIcon size={11}/>}
+      </div>
+    </div>
+  );
+}
+
+function StepBar({ step }) {
+  const steps = ["Товары", "restore:club", "Оплата"];
+  return (
+    <div style={{ display: "flex", alignItems: "center", padding: "0 16px", marginBottom: 16 }}>
+      {steps.map((s, i) => (
+        <div key={i} style={{ display: "flex", alignItems: "center", flex: i < steps.length - 1 ? 1 : 0 }}>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+            <div style={{
+              width: 28, height: 28, borderRadius: "50%",
+              background: i < step ? C.dark : i === step ? C.accent : C.border,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              color: i < step ? "#fff" : i === step ? C.dark : C.sub,
+              fontSize: 12, fontWeight: 800, transition: "all .3s",
+              boxShadow: i === step ? "0 0 0 4px rgba(255,92,185,0.3)" : "none"
+            }}>{i < step ? <CheckIcon size={13}/> : i + 1}</div>
+            <div style={{ fontSize: 10, color: i === step ? C.dark : C.sub, fontWeight: i === step ? 700 : 500, whiteSpace: "nowrap", letterSpacing: "-0.1px" }}>{s}</div>
+          </div>
+          {i < steps.length - 1 && (
+            <div style={{
+              flex: 1, height: 2, background: i < step ? C.dark : C.border,
+              marginBottom: 14, marginLeft: 4, marginRight: 4, transition: "all .3s"
+            }}/>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function SuccessScreen({ amount, bonuses, method, onReset }) {
+  return (
+    <div style={{
+      position: "fixed", inset: 0, zIndex: 100, background: "#fff",
+      display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+      animation: "fadeIn .35s ease"
+    }}>
+      <style>{`@keyframes pop{0%{transform:scale(.4);opacity:0}65%{transform:scale(1.12)}100%{transform:scale(1);opacity:1}}@keyframes fadeIn{from{opacity:0}to{opacity:1}}`}</style>
+      <div style={{
+        width: 96, height: 96, borderRadius: "50%", background: C.accent,
+        display: "flex", alignItems: "center", justifyContent: "center",
+        animation: "pop .5s ease .08s both", marginBottom: 24,
+        boxShadow: "0 8px 28px rgba(255,92,185,0.5)"
+      }}>
+        <CheckIcon size={48} color={C.dark}/>
+      </div>
+      <div style={{ fontSize: 28, fontWeight: 800, color: C.dark, marginBottom: 8, letterSpacing: "-0.6px" }}>Оплачено!</div>
+      <div style={{ fontSize: 22, fontWeight: 800, color: C.dark, marginBottom: 4 }} className="num">{amount.toLocaleString("ru-RU", { maximumFractionDigits: 0 })} ₽</div>
+      <div style={{ fontSize: 13, color: C.sub, marginBottom: 24 }}>{method}</div>
+      {bonuses > 0 && (
+        <div style={{
+          padding: "10px 20px", borderRadius: 14, background: C.accent,
+          display: "flex", alignItems: "center", gap: 8
+        }}>
+          <span style={{ fontSize: 18 }}>★</span>
+          <span style={{ fontSize: 14, fontWeight: 800, color: C.dark }}>+{bonuses.toLocaleString("ru-RU")} баллов restore:club</span>
+        </div>
+      )}
+      <button onClick={onReset} style={{
+        marginTop: 28, padding: "12px 32px", borderRadius: 14,
+        background: C.cream, border: "none", color: C.dark,
+        fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "inherit"
+      }}>← Вернуться</button>
+    </div>
+  );
+}
+
+/* ========== ISSUANCE FLOW ========== */
+
+const FLOWS = {
+  n2b:      { route: ["consents", "phone", "otp", "form", "issued", "topup", "slot", "delivered"], label: "Новый клиент" },
+  existing: { route: ["consents", "phone", "otp", "select"],                                       label: "Действующий" },
+};
+
+function IssueHeader({ onClose, label }) {
+  return (
+    <div style={{
+      padding: "14px 16px 12px", borderBottom: `1px solid ${C.border}`,
+      background: "#fff", display: "flex", alignItems: "center", gap: 10,
+      flexShrink: 0
+    }}>
+      <button onClick={onClose} style={{
+        width: 32, height: 32, borderRadius: 10, border: "none",
+        background: C.bg, cursor: "pointer", fontSize: 16, fontFamily: "inherit",
+        color: C.dark, fontWeight: 700
+      }}>✕</button>
+      <div style={{ flex: 1 }}>
+        <div style={{ fontSize: 14, fontWeight: 800, color: C.dark, letterSpacing: "-0.2px" }}>Оформление xPay</div>
+        <div style={{ fontSize: 11, color: C.sub, display: "flex", alignItems: "center", gap: 5, marginTop: 2 }}>
+          <span style={{
+            width: 14, height: 14, borderRadius: 3, background: C.alfaRed,
+            display: "inline-flex", alignItems: "center", justifyContent: "center",
+            fontSize: 9, fontWeight: 800, color: "#fff"
+          }}>A</span>
+          🔒 Защищено · обслуживает Альфа-Банк
+        </div>
+      </div>
+      <span style={{
+        fontSize: 10, fontWeight: 800, padding: "4px 9px", borderRadius: 6,
+        background: C.accent, color: C.dark, letterSpacing: "0.3px"
+      }}>{label}</span>
+    </div>
+  );
+}
+
+function IssueProgress({ idx, total }) {
+  return (
+    <div style={{ display: "flex", gap: 4, padding: "10px 16px 4px", flexShrink: 0 }}>
+      {Array.from({ length: total }).map((_, i) => (
+        <div key={i} style={{
+          flex: 1, height: 3, borderRadius: 2,
+          background: i <= idx ? C.accent : C.border, transition: "background .3s"
+        }}/>
+      ))}
+    </div>
+  );
+}
+
+function ConsentsScreen({ onNext, clientType }) {
+  return (
+    <div style={{ padding: "20px 16px" }}>
+      <div style={{
+        width: 64, height: 64, borderRadius: 18, marginBottom: 14,
+        background: C.accent, display: "flex", alignItems: "center", justifyContent: "center",
+        boxShadow: "0 4px 14px rgba(255,92,185,0.4)"
+      }}>
+        <span style={{ fontSize: 30 }}>✨</span>
+      </div>
+      <div style={{ fontSize: 24, fontWeight: 800, lineHeight: 1.15, marginBottom: 8, color: C.dark, letterSpacing: "-0.6px" }}>Платите xPay в restore:</div>
+      <div style={{ fontSize: 13, color: C.sub, marginBottom: 16, lineHeight: 1.5 }}>
+        {clientType === "existing"
+          ? "Привяжите карту Альфа-Банка и платите с рассрочкой 0% и кешбэком"
+          : "Оформите карту за 30 секунд — рассрочка 0% на 24 месяца"}
+      </div>
+      {[
+        { i: "0%", t: "Рассрочка 0% до 24 месяцев на технику" },
+        { i: "10%", t: "Кешбэк 10% на покупки в restore:" },
+        { i: "★", t: "Бонусы restore:club + статус привилегий" },
+        { i: "⚡", t: clientType === "existing" ? "Привязка карты за 20 секунд" : "Без визита в отделение банка" },
+      ].map((b, i) => (
+        <div key={i} style={{
+          display: "flex", gap: 12, alignItems: "center",
+          padding: "12px 14px", marginBottom: 8,
+          background: C.cream, borderRadius: 12
+        }}>
+          <div style={{
+            width: 32, height: 32, borderRadius: 8, background: C.accent,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: 13, fontWeight: 800, color: C.dark, flexShrink: 0
+          }}>{b.i}</div>
+          <span style={{ fontSize: 13, fontWeight: 600, color: C.dark, letterSpacing: "-0.1px" }}>{b.t}</span>
+        </div>
+      ))}
+      <PrimaryBtn label="Продолжить" onClick={onNext}/>
+      <div style={{ fontSize: 10, color: C.sub, marginTop: 12, lineHeight: 1.5 }}>
+        Нажимая «Продолжить», вы соглашаетесь с Памяткой ЭДС, СОПД и условиями обслуживания. Эмитент карты — АО «Альфа-Банк».
+      </div>
+    </div>
+  );
+}
+
+function PhoneScreen({ onNext }) {
+  const [phone, setPhone] = useState("+7 (985) 770-12-34");
+  return (
+    <div style={{ padding: "20px 16px" }}>
+      <div style={{ fontSize: 22, fontWeight: 800, marginBottom: 8, color: C.dark, letterSpacing: "-0.5px" }}>Введите номер телефона</div>
+      <div style={{ fontSize: 13, color: C.sub, marginBottom: 24 }}>Мы отправим код подтверждения</div>
+      <div style={{
+        padding: "10px 14px", borderRadius: 14, background: "#fff",
+        border: `2px solid ${C.dark}`, marginBottom: 8
+      }}>
+        <div style={{ fontSize: 10, color: C.sub, textTransform: "uppercase", letterSpacing: 1, fontWeight: 700 }}>Номер телефона</div>
+        <input value={phone} onChange={e => setPhone(e.target.value)} style={{
+          width: "100%", border: "none", background: "transparent",
+          fontSize: 18, fontWeight: 700, color: C.dark, marginTop: 3,
+          outline: "none", fontFamily: "inherit"
+        }}/>
+      </div>
+      <div style={{ fontSize: 11, color: C.sub, marginBottom: 20, display: "flex", gap: 5, alignItems: "center" }}>
+        <InfoIcon size={12}/> Используется для подтверждения и связи
+      </div>
+      <PrimaryBtn label="Получить код" onClick={onNext}/>
+    </div>
+  );
+}
+
+function OtpScreen({ onNext }) {
+  const [code, setCode] = useState("");
+  const [timer, setTimer] = useState(25);
+
+  useEffect(() => {
+    if (timer > 0) {
+      const t = setTimeout(() => setTimer(timer - 1), 1000);
+      return () => clearTimeout(t);
+    }
+  }, [timer]);
+
+  useEffect(() => {
+    if (code.length < 4) {
+      const t = setTimeout(() => setCode(code + ((code.length + 4) % 10)), 350);
+      return () => clearTimeout(t);
+    } else {
+      const t = setTimeout(onNext, 600);
+      return () => clearTimeout(t);
+    }
+  }, [code]);
+
+  return (
+    <div style={{ padding: "20px 16px", textAlign: "center" }}>
+      <div style={{ fontSize: 22, fontWeight: 800, marginBottom: 8, color: C.dark, letterSpacing: "-0.5px" }}>Введите код из СМС</div>
+      <div style={{ fontSize: 13, color: C.sub, marginBottom: 28 }}>Код отправлен на +7 985 ●●●-12-34</div>
+      <div style={{ display: "flex", gap: 10, justifyContent: "center", marginBottom: 20 }}>
+        {[0,1,2,3].map(i => (
+          <div key={i} style={{
+            width: 54, height: 62, borderRadius: 12,
+            background: code.length > i ? C.accent : "#fff",
+            border: `2px solid ${code.length === i ? C.dark : code.length > i ? C.accent : C.border}`,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: 26, fontWeight: 800, color: C.dark, transition: "all .15s"
+          }}>
+            {code[i] || (code.length === i ? <span style={{ opacity: 0.4, animation: "blink 1s infinite" }}>|</span> : "")}
+          </div>
+        ))}
+      </div>
+      <style>{`@keyframes blink{0%,50%{opacity:.4}51%,100%{opacity:0}}`}</style>
+      <div style={{ fontSize: 12, color: timer > 0 ? C.sub : C.dark, fontWeight: 700 }}>
+        {timer > 0 ? `Повторно через 0:${timer.toString().padStart(2, "0")}` : "Отправить код повторно"}
+      </div>
+    </div>
+  );
+}
+
+function FormScreen({ onNext }) {
+  const fields = [
+    { l: "Фамилия", v: "Соколов", note: "из заказа restore:" },
+    { l: "Имя", v: "Михаил", note: "из заказа restore:" },
+    { l: "Отчество", v: "Андреевич" },
+    { l: "Дата рождения", v: "22.07.1988" },
+  ];
+  return (
+    <div style={{ padding: "20px 16px" }}>
+      <div style={{ fontSize: 22, fontWeight: 800, marginBottom: 8, color: C.dark, letterSpacing: "-0.5px" }}>Заполните заявку</div>
+      <div style={{ fontSize: 12, color: C.sub, marginBottom: 16, display: "flex", alignItems: "center", gap: 10 }}>
+        <span style={{ fontWeight: 600 }}>Шаг 1 из 2</span>
+        <div style={{ flex: 1, height: 3, background: C.border, borderRadius: 2 }}>
+          <div style={{ width: "50%", height: "100%", background: C.accent, borderRadius: 2 }}/>
+        </div>
+      </div>
+      {fields.map((f, i) => (
+        <div key={i} style={{
+          padding: "10px 14px", marginBottom: 8, background: "#fff",
+          border: `1px solid ${C.border}`, borderRadius: 12, position: "relative"
+        }}>
+          <div style={{ fontSize: 10, color: C.sub, textTransform: "uppercase", letterSpacing: 1, fontWeight: 700 }}>{f.l}</div>
+          <div style={{ fontSize: 14, fontWeight: 700, marginTop: 2, color: C.dark }}>{f.v}</div>
+          {f.note && (
+            <span style={{
+              position: "absolute", top: 10, right: 12,
+              fontSize: 9, fontWeight: 800, color: C.dark,
+              background: C.accent, padding: "2px 7px", borderRadius: 5
+            }}>✓ {f.note}</span>
+          )}
+        </div>
+      ))}
+      <div style={{
+        display: "flex", justifyContent: "space-between", alignItems: "center",
+        padding: "10px 14px", marginBottom: 16,
+        background: "#fff", border: `1px solid ${C.border}`, borderRadius: 12
+      }}>
+        <span style={{ fontSize: 12, color: C.sub }}>Гражданин РФ</span>
+        <span style={{ fontSize: 13, fontWeight: 700, color: C.dark, display: "flex", alignItems: "center", gap: 5 }}>
+          Да <CheckIcon size={12} color={C.dark}/>
+        </span>
+      </div>
+      <PrimaryBtn label="Продолжить" onClick={onNext}/>
+    </div>
+  );
+}
+
+function IssuedScreen({ onNext }) {
+  return (
+    <div style={{ padding: "24px 16px", textAlign: "center" }}>
+      <div style={{
+        width: 72, height: 72, borderRadius: "50%", background: C.accent,
+        margin: "0 auto 16px", display: "flex", alignItems: "center", justifyContent: "center",
+        animation: "pop .4s ease", boxShadow: "0 6px 20px rgba(255,92,185,0.5)"
+      }}>
+        <CheckIcon size={34} color={C.dark}/>
+      </div>
+      <div style={{ fontSize: 22, fontWeight: 800, marginBottom: 8, color: C.dark, letterSpacing: "-0.5px" }}>xPay выпущена!</div>
+      <div style={{ fontSize: 13, color: C.sub, marginBottom: 20, lineHeight: 1.5 }}>
+        Карта готова к оплате. Все данные переданы на чек-аут restore: автоматически.
+      </div>
+      <div style={{
+        padding: 14, background: C.cream, borderRadius: 16, marginBottom: 12,
+        display: "flex", alignItems: "center", gap: 12
+      }}>
+        <XpayCardSvg width={92}/>
+        <div style={{ textAlign: "left" }}>
+          <div style={{ fontSize: 14, fontWeight: 800, color: C.dark }}>xPay restore:</div>
+          <div style={{ fontSize: 11, color: C.sub, marginTop: 2 }}>*8217 · МИР · Баланс 0 ₽</div>
+          <div style={{
+            fontSize: 10, fontWeight: 800, color: C.dark, marginTop: 5,
+            display: "inline-block", padding: "3px 8px",
+            background: C.accent, borderRadius: 5, letterSpacing: "0.3px"
+          }}>✓ АКТИВНА</div>
+        </div>
+      </div>
+      <div style={{
+        padding: "10px 14px", borderRadius: 12, marginBottom: 16,
+        background: C.accentLight, border: `1px solid ${C.accentSoft}`,
+        display: "flex", gap: 8, alignItems: "flex-start", textAlign: "left"
+      }}>
+        <span style={{ fontSize: 15 }}>💡</span>
+        <span style={{ fontSize: 12, color: C.dark, lineHeight: 1.5, fontWeight: 500 }}>
+          Карта выпущена с нулевым балансом. Пополните её через СБП, чтобы оплатить покупку
+        </span>
+      </div>
+      <PrimaryBtn label="Пополнить карту" onClick={onNext}/>
+    </div>
+  );
+}
+
+function SelectAlfaCardScreen({ onNext }) {
+  const [sel, setSel] = useState(0);
+  const cards = [
+    { last: "0817", name: "Альфа-Карта Premium", bal: "284 500 ₽", type: "Дебетовая · МИР" },
+    { last: "3309", name: "Альфа Только Польза", bal: "92 100 ₽", type: "Кредитная · Visa" },
+    { last: "6017", name: "Альфа-Карта",         bal: "12 240 ₽", type: "Дебетовая · МС" },
+  ];
+  return (
+    <div style={{ padding: "20px 16px" }}>
+      <div style={{ fontSize: 22, fontWeight: 800, marginBottom: 8, color: C.dark, letterSpacing: "-0.5px" }}>Выберите карту</div>
+      <div style={{ fontSize: 13, color: C.sub, marginBottom: 16 }}>Привяжем её к xPay для покупок в restore:</div>
+      {cards.map((c, i) => (
+        <div key={i} onClick={() => setSel(i)} style={{
+          display: "flex", alignItems: "center", gap: 12,
+          padding: "10px 12px", marginBottom: 8, cursor: "pointer",
+          background: sel === i ? C.accentLight : "#fff", borderRadius: 12,
+          border: `2px solid ${sel === i ? C.accent : C.border}`, transition: "all .15s"
+        }}>
+          <AlfaCardSvg width={56} last={c.last}/>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: C.dark }}>{c.name}</div>
+            <div style={{ fontSize: 11, color: C.sub, marginTop: 1 }} className="num">*{c.last} · {c.bal}</div>
+            <div style={{ fontSize: 10, color: C.sub, marginTop: 1 }}>{c.type}</div>
+          </div>
+          <div style={{
+            width: 22, height: 22, borderRadius: "50%",
+            border: `2px solid ${sel === i ? C.dark : "#CCC"}`,
+            background: sel === i ? C.dark : "transparent",
+            display: "flex", alignItems: "center", justifyContent: "center"
+          }}>
+            {sel === i && <CheckIcon size={11}/>}
+          </div>
+        </div>
+      ))}
+      <div style={{ marginTop: 14 }}>
+        <PrimaryBtn label="Привязать к xPay" onClick={onNext}/>
+      </div>
+    </div>
+  );
+}
+
+function TopupScreen({ onNext, onSkip }) {
+  const [bank, setBank] = useState(null);
+  const [stage, setStage] = useState("select");
+  const [amount, setAmount] = useState(14980);
+
+  const banks = [
+    { id: "sber",  name: "Сбербанк",    color: "#21A038", textColor: "#fff",    letter: "С" },
+    { id: "tbank", name: "Т-Банк",      color: "#FFDD2D", textColor: "#000",    letter: "Т" },
+    { id: "vtb",   name: "ВТБ",         color: "#0A2973", textColor: "#fff",    letter: "В" },
+    { id: "raif",  name: "Райффайзен",  color: "#FEE600", textColor: "#003C71", letter: "R" },
+    { id: "other", name: "Другой банк", color: "#6B7785", textColor: "#fff",    letter: "+" },
+  ];
+
+  const selectedBank = banks.find(b => b.id === bank);
+
+  const handleConfirm = () => {
+    if (!bank) return;
+    setStage("processing");
+    setTimeout(() => setStage("done"), 1500);
+  };
+
+  if (stage === "done") {
+    return (
+      <div style={{ padding: "30px 16px 24px", textAlign: "center" }}>
+        <div style={{
+          width: 76, height: 76, borderRadius: "50%", background: C.accent,
+          margin: "0 auto 14px", display: "flex", alignItems: "center", justifyContent: "center",
+          animation: "pop .4s ease", boxShadow: "0 6px 20px rgba(255,92,185,0.5)"
+        }}>
+          <CheckIcon size={36} color={C.dark}/>
+        </div>
+        <div style={{ fontSize: 22, fontWeight: 800, color: C.dark, marginBottom: 6, letterSpacing: "-0.5px" }}>Карта пополнена!</div>
+        <div style={{ fontSize: 13, color: C.sub, marginBottom: 22 }}>
+          <span style={{ fontWeight: 700, color: C.dark }} className="num">{amount.toLocaleString("ru-RU")} ₽</span> зачислены на *8217
+        </div>
+
+        <div style={{
+          padding: "14px 14px", borderRadius: 14, background: C.cream,
+          textAlign: "left", marginBottom: 12,
+          display: "flex", gap: 12, alignItems: "center"
+        }}>
+          <div style={{
+            width: 44, height: 44, borderRadius: 12, background: C.accent,
+            display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0
+          }}>
+            <span style={{ fontSize: 22 }}>📦</span>
+          </div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 13, fontWeight: 800, color: C.dark }}>Заберите пластик в магазине</div>
+            <div style={{ fontSize: 11, color: C.sub, marginTop: 2, lineHeight: 1.4 }}>
+              Или закажите бесплатную курьерскую доставку
+            </div>
+          </div>
+        </div>
+
+        <PrimaryBtn label="Заказать пластиковую карту" onClick={onNext}/>
+        <button onClick={onSkip} style={{
+          width: "100%", padding: "12px 0", marginTop: 8,
+          background: "transparent", border: "none",
+          color: C.sub, fontSize: 13, fontWeight: 600,
+          cursor: "pointer", fontFamily: "inherit"
+        }}>Пропустить → перейти к оплате</button>
+      </div>
+    );
+  }
+
+  if (stage === "processing") {
+    return (
+      <div style={{ padding: "36px 16px", textAlign: "center" }}>
+        <div style={{ position: "relative", width: 84, height: 84, margin: "0 auto 18px" }}>
+          <SbpLogo size={84}/>
+          <div style={{
+            position: "absolute", inset: -6,
+            border: `3px solid ${C.accent}`, borderRadius: "50%",
+            borderTopColor: "transparent",
+            animation: "spin 1s linear infinite"
+          }}/>
+        </div>
+        <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+        <div style={{ fontSize: 18, fontWeight: 800, color: C.dark, marginBottom: 8, letterSpacing: "-0.4px" }}>Подтверждение через СБП</div>
+        <div style={{ fontSize: 13, color: C.sub, lineHeight: 1.5 }}>
+          Открываем приложение<br/>
+          <span style={{ fontWeight: 700, color: C.dark }}>«{selectedBank?.name}»</span>
+        </div>
+        <div style={{
+          marginTop: 18, padding: "8px 14px", borderRadius: 10,
+          background: C.cream, fontSize: 11, color: C.dark, fontWeight: 600,
+          display: "inline-block"
+        }}>Не закрывайте окно</div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ padding: "20px 16px" }}>
+      <div style={{ fontSize: 22, fontWeight: 800, marginBottom: 6, color: C.dark, letterSpacing: "-0.5px" }}>Пополните карту</div>
+      <div style={{ fontSize: 13, color: C.sub, marginBottom: 16 }}>Перевод через СБП с карты другого банка</div>
+
+      <div style={{
+        padding: "11px 14px", borderRadius: 12, background: C.cream,
+        display: "flex", alignItems: "center", gap: 10, marginBottom: 14
+      }}>
+        <XpayCardSvg width={58}/>
+        <div>
+          <div style={{ fontSize: 13, fontWeight: 800, color: C.dark }}>xPay *8217</div>
+          <div style={{ fontSize: 11, color: C.sub, marginTop: 2 }}>Баланс: 0 ₽</div>
+        </div>
+      </div>
+
+      <div style={{
+        padding: "11px 14px", borderRadius: 12, background: "#fff",
+        border: `1px solid ${C.border}`, marginBottom: 14
+      }}>
+        <div style={{ fontSize: 10, color: C.sub, textTransform: "uppercase", letterSpacing: 1, fontWeight: 700, marginBottom: 4 }}>Сумма пополнения</div>
+        <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
+          <input value={amount} onChange={e => setAmount(Number(e.target.value) || 0)} type="number" style={{
+            border: "none", background: "transparent",
+            fontSize: 24, fontWeight: 800, color: C.dark,
+            outline: "none", width: 130, fontFamily: "inherit"
+          }} className="num"/>
+          <span style={{ fontSize: 20, fontWeight: 700, color: C.dark }}>₽</span>
+        </div>
+        <div style={{ fontSize: 10, color: C.sub, marginTop: 4 }}>Достаточно для оплаты заказа</div>
+      </div>
+
+      <div style={{ fontSize: 11, fontWeight: 800, color: C.sub, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 8 }}>Выберите банк</div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 16 }}>
+        {banks.map(b => (
+          <div key={b.id} onClick={() => setBank(b.id)} style={{
+            display: "flex", alignItems: "center", gap: 12,
+            padding: "10px 12px", borderRadius: 12, cursor: "pointer",
+            background: bank === b.id ? C.accentLight : "#fff",
+            border: `2px solid ${bank === b.id ? C.accent : C.border}`,
+            transition: "all .15s"
+          }}>
+            <div style={{
+              width: 32, height: 32, borderRadius: 8, background: b.color,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              color: b.textColor, fontSize: 14, fontWeight: 800, flexShrink: 0
+            }}>{b.letter}</div>
+            <div style={{ flex: 1, fontSize: 13, fontWeight: 700, color: C.dark }}>{b.name}</div>
+            <div style={{
+              width: 18, height: 18, borderRadius: "50%",
+              border: `2px solid ${bank === b.id ? C.dark : "#CCC"}`,
+              background: bank === b.id ? C.dark : "transparent",
+              display: "flex", alignItems: "center", justifyContent: "center"
+            }}>
+              {bank === b.id && <CheckIcon size={9}/>}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <PrimaryBtn label={bank ? `Пополнить через ${selectedBank?.name}` : "Выберите банк"} onClick={handleConfirm} disabled={!bank}/>
+      <div style={{ fontSize: 10, color: C.sub, marginTop: 10, textAlign: "center" }}>СБП · Без комиссии · Мгновенно</div>
+    </div>
+  );
+}
+
+function SlotScreen({ onNext }) {
+  const slots = [
+    { d: "Завтра", date: "20 мая", t: "09:00 – 13:00", free: true },
+    { d: "Завтра", date: "20 мая", t: "13:00 – 17:00", free: false },
+    { d: "Завтра", date: "20 мая", t: "17:00 – 21:00", free: true },
+    { d: "Сб",    date: "21 мая", t: "10:00 – 14:00", free: true },
+  ];
+  const [sel, setSel] = useState(0);
+  return (
+    <div style={{ padding: "20px 16px" }}>
+      <div style={{ fontSize: 22, fontWeight: 800, marginBottom: 8, color: C.dark, letterSpacing: "-0.5px" }}>Доставка пластика</div>
+      <div style={{ fontSize: 13, color: C.sub, marginBottom: 18 }}>Выберите удобный слот. Бесплатно для restore:</div>
+      <div style={{
+        padding: "12px 14px", borderRadius: 12, background: C.cream, marginBottom: 14,
+        display: "flex", gap: 10, alignItems: "center"
+      }}>
+        <span style={{ fontSize: 22 }}>📍</span>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 13, fontWeight: 800, color: C.dark }}>Москва, Покровка, 12, кв. 47</div>
+          <div style={{ fontSize: 11, color: C.sub, marginTop: 2 }}>Изменить адрес</div>
+        </div>
+      </div>
+      {slots.map((s, i) => (
+        <div key={i} onClick={() => s.free && setSel(i)} style={{
+          padding: "12px 14px", marginBottom: 7, borderRadius: 12,
+          background: !s.free ? "#F8F8F8" : sel === i ? C.accentLight : "#fff",
+          border: `2px solid ${!s.free ? "transparent" : sel === i ? C.accent : C.border}`,
+          display: "flex", alignItems: "center", gap: 12,
+          cursor: s.free ? "pointer" : "not-allowed", opacity: s.free ? 1 : 0.5,
+          transition: "all .15s"
+        }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: C.dark }}>{s.d}, {s.date}</div>
+            <div style={{ fontSize: 12, color: C.sub, marginTop: 1 }} className="num">{s.t}</div>
+          </div>
+          {s.free ? (
+            <div style={{
+              width: 22, height: 22, borderRadius: "50%",
+              border: `2px solid ${sel === i ? C.dark : "#CCC"}`,
+              background: sel === i ? C.dark : "transparent",
+              display: "flex", alignItems: "center", justifyContent: "center"
+            }}>
+              {sel === i && <CheckIcon size={11}/>}
+            </div>
+          ) : (
+            <span style={{ fontSize: 10, color: C.sub, fontWeight: 700 }}>Занято</span>
+          )}
+        </div>
+      ))}
+      <div style={{
+        background: "#fff", padding: "12px 14px", borderRadius: 12,
+        border: `1px solid ${C.border}`, marginTop: 8, marginBottom: 16
+      }}>
+        {[
+          { l: "📦 Стоимость",   v: "Бесплатно", green: true },
+          { l: "🕐 Доставка",  v: `${slots[sel].d}, ${slots[sel].t}` },
+          { l: "🆔 Документы", v: "Паспорт" },
+        ].map((r, i) => (
+          <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "5px 0", fontSize: 12, gap: 12 }}>
+            <span style={{ color: C.sub, fontWeight: 500, flexShrink: 0 }}>{r.l}</span>
+            <span style={{ color: r.green ? C.green : C.dark, fontWeight: 700, textAlign: "right" }}>{r.v}</span>
+          </div>
+        ))}
+      </div>
+
+      <div style={{
+        padding: "10px 14px", borderRadius: 12, marginBottom: 16,
+        background: C.accentLight, border: `1px solid ${C.accentSoft}`,
+        display: "flex", gap: 8, alignItems: "flex-start"
+      }}>
+        <span style={{ fontSize: 15 }}>💡</span>
+        <span style={{ fontSize: 11, color: C.dark, lineHeight: 1.5, fontWeight: 500, textAlign: "left" }}>
+          Цифровая карта уже работает — можно оплачивать прямо сейчас. Пластик понадобится для NFC-оплаты в магазине
+        </span>
+      </div>
+
+      <PrimaryBtn label="Перейти к оплате" onClick={onNext}/>
+    </div>
+  );
+}
+
+function DeliveredScreen({ onNext }) {
+  return (
+    <div style={{ padding: "30px 16px", textAlign: "center" }}>
+      <div style={{
+        width: 80, height: 80, borderRadius: "50%", background: C.accent,
+        margin: "0 auto 16px", display: "flex", alignItems: "center", justifyContent: "center",
+        animation: "pop .4s ease", boxShadow: "0 6px 20px rgba(255,92,185,0.5)"
+      }}>
+        <span style={{ fontSize: 38 }}>📦</span>
+      </div>
+      <div style={{ fontSize: 22, fontWeight: 800, color: C.dark, marginBottom: 8, letterSpacing: "-0.5px" }}>Заказ оформлен!</div>
+      <div style={{ fontSize: 13, color: C.sub, marginBottom: 20, lineHeight: 1.5 }}>
+        Пластиковая карта приедет завтра.<br/>А пока можно платить цифровой картой xPay.
+      </div>
+      <PrimaryBtn label="Перейти к оплате" onClick={onNext}/>
+    </div>
+  );
+}
+
+function CardIssuanceModal({ clientType, onClose, onComplete }) {
+  const [idx, setIdx] = useState(0);
+  const flow = FLOWS[clientType] || FLOWS.n2b;
+  const route = flow.route;
+  const cur = route[idx];
+
+  const next = () => {
+    if (idx < route.length - 1) setIdx(idx + 1);
+    else onComplete();
+  };
+
+  const screens = {
+    consents:  <ConsentsScreen onNext={next} clientType={clientType}/>,
+    phone:     <PhoneScreen onNext={next}/>,
+    otp:       <OtpScreen onNext={next}/>,
+    form:      <FormScreen onNext={next}/>,
+    issued:    <IssuedScreen onNext={next}/>,
+    select:    <SelectAlfaCardScreen onNext={next}/>,
+    topup:     <TopupScreen onNext={next} onSkip={onComplete}/>,
+    slot:      <SlotScreen onNext={next}/>,
+    delivered: <DeliveredScreen onNext={onComplete}/>,
+  };
+
+  return (
+    <div style={{
+      position: "fixed", inset: 0, zIndex: 200, background: "rgba(10,10,10,0.55)",
+      display: "flex", alignItems: "flex-end", justifyContent: "center",
+      animation: "fadeIn .3s ease"
+    }}>
+      <style>{`@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}`}</style>
+      <div style={{
+        width: "100%", maxWidth: 400, background: "#fff",
+        borderRadius: "22px 22px 0 0",
+        height: "92vh",
+        animation: "slideUp .35s cubic-bezier(.2,.8,.2,1)",
+        display: "flex", flexDirection: "column"
+      }}>
+        <IssueHeader onClose={onClose} label={flow.label}/>
+        <IssueProgress idx={idx} total={route.length}/>
+        <div style={{
+          flex: "1 1 0", minHeight: 0,
+          overflowY: "auto", WebkitOverflowScrolling: "touch"
+        }}>
+          {screens[cur] || (
+            <div style={{ padding: "40px 16px", textAlign: "center", color: C.sub }}>
+              Шаг «{cur}» не найден
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ========== CHECKOUT ========== */
+
+const ITEMS = [
+  { name: "AirPods 4",                  price: 11990, qty: 1, emoji: "🎧" },
+  { name: "Чехол Silicone для iPhone",  price:  2990, qty: 1, emoji: "📱" },
+];
+const TOTAL_AMOUNT = ITEMS.reduce((s, i) => s + i.price * i.qty, 0);
+
+function Step1({ onNext }) {
+  return (
+    <div style={{ paddingBottom: 16 }}>
+      {ITEMS.map((item, i) => (
+        <div key={i}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 16px" }}>
+            <div style={{
+              width: 38, height: 38, borderRadius: 10, background: C.bg,
+              display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, flexShrink: 0
+            }}>{item.emoji}</div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: C.dark, letterSpacing: "-0.1px" }}>{item.name}</div>
+              <div style={{ fontSize: 12, color: C.sub, marginTop: 1 }} className="num">{item.qty} × {item.price.toLocaleString("ru-RU")} ₽</div>
+            </div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: C.dark }} className="num">{(item.price * item.qty).toLocaleString("ru-RU")} ₽</div>
+          </div>
+          {i < ITEMS.length - 1 && <Divider mx={16}/>}
+        </div>
+      ))}
+      <Divider/>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 16px 16px" }}>
+        <span style={{ fontSize: 16, fontWeight: 800, color: C.dark, letterSpacing: "-0.3px" }}>Итого</span>
+        <span style={{ fontSize: 24, fontWeight: 800, color: C.dark, letterSpacing: "-0.5px" }} className="num">{TOTAL_AMOUNT.toLocaleString("ru-RU")} ₽</span>
+      </div>
+      <Divider/>
+      <div style={{ padding: "14px 16px 0" }}>
+        <div style={{
+          padding: "14px 16px", borderRadius: 16, cursor: "pointer",
+          background: C.accent, display: "flex", alignItems: "center", gap: 12,
+          boxShadow: "0 4px 14px rgba(255,92,185,0.35)"
+        }} onClick={onNext}>
+          <div style={{
+            width: 44, height: 44, borderRadius: 12, background: C.dark,
+            display: "flex", alignItems: "center", justifyContent: "center"
+          }}>
+            <span style={{ fontSize: 22 }}>★</span>
+          </div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 14, fontWeight: 800, color: "#fff", letterSpacing: "-0.2px" }}>restore:club</div>
+            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.85)", marginTop: 2 }}>Покажите QR для начисления бонусов</div>
+          </div>
+          <ChevronRight size={20} color="#fff"/>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function OnlineCart() {
+  return (
+    <div>
+      <div style={{ padding: "14px 16px 8px", fontSize: 11, fontWeight: 800, color: C.sub, letterSpacing: 0.8, textTransform: "uppercase" }}>
+        Ваш заказ · {ITEMS.length} {ITEMS.length === 1 ? "товар" : "товара"}
+      </div>
+      {ITEMS.map((item, i) => (
+        <div key={i}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 16px" }}>
+            <div style={{
+              width: 38, height: 38, borderRadius: 10, background: C.cream,
+              display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, flexShrink: 0
+            }}>{item.emoji}</div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: C.dark, letterSpacing: "-0.1px" }}>{item.name}</div>
+              <div style={{ fontSize: 11, color: C.sub, marginTop: 1 }} className="num">{item.qty} шт. · {item.price.toLocaleString("ru-RU")} ₽</div>
+            </div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: C.dark }} className="num">{(item.price * item.qty).toLocaleString("ru-RU")} ₽</div>
+          </div>
+          {i < ITEMS.length - 1 && <Divider mx={16}/>}
+        </div>
+      ))}
+      <Divider/>
+      <div style={{ display: "flex", flexDirection: "column", gap: 4, padding: "10px 16px 12px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: C.sub }}>
+          <span>Доставка курьером</span>
+          <span style={{ color: C.green, fontWeight: 700 }}>Бесплатно</span>
+        </div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginTop: 4 }}>
+          <span style={{ fontSize: 14, fontWeight: 700, color: C.dark, letterSpacing: "-0.2px" }}>Итого</span>
+          <span style={{ fontSize: 22, fontWeight: 800, color: C.dark, letterSpacing: "-0.5px" }} className="num">{TOTAL_AMOUNT.toLocaleString("ru-RU")} ₽</span>
+        </div>
+      </div>
+      <div style={{ height: 1, background: C.dark, opacity: 0.08, margin: "0 16px" }}/>
+    </div>
+  );
+}
+
+function Step2({ onNext }) {
+  const [scanned, setScanned] = useState(false);
+  const [scanning, setScanning] = useState(false);
+
+  const handleScan = () => {
+    if (scanned) return;
+    setScanning(true);
+    setTimeout(() => { setScanning(false); setScanned(true); }, 1800);
+  };
+
+  return (
+    <div style={{ paddingBottom: 16 }}>
+      <div style={{ padding: "14px 16px 12px", display: "flex", alignItems: "center", gap: 14 }}>
+        <XpayCardSvg width={88}/>
+        <div>
+          <div style={{ fontSize: 14, fontWeight: 800, color: C.dark, letterSpacing: "-0.2px" }}>xPay restore:</div>
+          <div style={{ fontSize: 12, color: C.sub, marginTop: 2 }} className="num">*8217 · Баланс 15 200 ₽</div>
+          <div style={{ fontSize: 12, marginTop: 3, display: "flex", alignItems: "center", gap: 5 }}>
+            <span style={{ color: C.dark, fontWeight: 700 }}>★ 4 000 баллов</span>
+            <span style={{ color: C.sub }}>= 400 ₽</span>
+          </div>
+        </div>
+      </div>
+      <Divider/>
+      <div style={{ padding: "18px 16px 10px", display: "flex", flexDirection: "column", alignItems: "center" }}>
+        <div style={{
+          padding: 14, background: scanned ? C.accent : "#fff",
+          borderRadius: 20, position: "relative",
+          border: `2px solid ${scanned ? C.dark : scanning ? C.accent : C.border}`,
+          boxShadow: "0 4px 24px rgba(10,10,10,0.06)", transition: "all .3s", cursor: "pointer"
+        }} onClick={handleScan}>
+          <QrCodeSvg size={172} highlight={!scanned}/>
+          {scanning && !scanned && (
+            <div style={{ position: "absolute", inset: 14, borderRadius: 12, overflow: "hidden", pointerEvents: "none" }}>
+              <div style={{
+                position: "absolute", left: 0, right: 0, height: 2.5,
+                background: `linear-gradient(90deg, transparent, ${C.dark}, transparent)`,
+                animation: "laser 1.4s ease-in-out infinite"
+              }}/>
+              <style>{`@keyframes laser{0%,100%{top:10%}50%{top:88%}}`}</style>
+            </div>
+          )}
+          {scanned && (
+            <div style={{
+              position: "absolute", inset: 0, borderRadius: 18,
+              background: "rgba(255,92,185,0.2)",
+              display: "flex", alignItems: "center", justifyContent: "center"
+            }}>
+              <div style={{
+                width: 62, height: 62, borderRadius: "50%", background: C.dark,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                animation: "pop .4s ease"
+              }}>
+                <CheckIcon size={32} color={C.accent}/>
+              </div>
+            </div>
+          )}
+        </div>
+        <div style={{ marginTop: 14, textAlign: "center" }}>
+          {scanned
+            ? <div style={{ color: C.dark, fontWeight: 800, fontSize: 15 }}>✓ Карта распознана</div>
+            : scanning
+            ? <div style={{ color: C.dark, fontSize: 14, fontWeight: 600 }}>Сканирование…</div>
+            : <>
+                <div style={{ fontSize: 14, fontWeight: 700, color: C.dark, marginBottom: 4, letterSpacing: "-0.1px" }}>Покажите QR консультанту</div>
+                <div style={{ fontSize: 12, color: C.sub }}>или нажмите для симуляции сканирования</div>
+              </>
+          }
+        </div>
+        <div style={{ marginTop: 8 }}>
+          <span style={{ fontSize: 12, color: C.sub, letterSpacing: 1.5 }} className="num">4830 0011 8274 6619</span>
+        </div>
+      </div>
+      {scanned && (
+        <div style={{
+          margin: "0 16px 12px", padding: "12px 14px", borderRadius: 14,
+          background: C.accent, display: "flex", alignItems: "center", gap: 10
+        }}>
+          <span style={{ fontSize: 20 }}>★</span>
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 800, color: C.dark }}>+{Math.floor(TOTAL_AMOUNT * 0.05).toLocaleString("ru-RU")} баллов restore:club</div>
+            <div style={{ fontSize: 11, color: C.dark, opacity: 0.7, marginTop: 1 }}>Начислим после оплаты</div>
+          </div>
+        </div>
+      )}
+      <div style={{
+        margin: "0 16px 14px", padding: "10px 14px", borderRadius: 12,
+        background: C.cream, border: `1px solid ${C.creamDark}`,
+        display: "flex", gap: 8, alignItems: "flex-start"
+      }}>
+        <span style={{ fontSize: 15 }}>⚠️</span>
+        <span style={{ fontSize: 12, color: C.dark, lineHeight: 1.5 }}>
+          Не передавайте QR третьим лицам — код даёт доступ к бонусам и скидкам
+        </span>
+      </div>
+      <div style={{ padding: "0 16px" }}>
+        <PrimaryBtn label={scanned ? "Перейти к оплате →" : "Пропустить"} onClick={onNext} secondary={!scanned}/>
+      </div>
+    </div>
+  );
+}
+
+const BNPL_PLANS = [
+  { parts: 2, label: "2 платежа", per: "Сейчас и через 2 недели", badge: "Без %" },
+  { parts: 4, label: "4 платежа", per: "Каждые 2 недели",         badge: "Без %" },
+];
+const REV_PLANS = [
+  { months: 6,  rate: 0,   label: "6 мес",  badge: "Без %"    },
+  { months: 12, rate: 0,   label: "12 мес", badge: "Без %"    },
+  { months: 24, rate: 0,   label: "24 мес", badge: "Без %"    },
+];
+const CREDIT_LIMIT = 100000;
+
+function Step3({ loyaltyScanned, hasXpay, onPay, onIssue }) {
+  const [method, setMethod] = useState(hasXpay ? "xpay" : "card");
+  const [bnplPlan, setBnplPlan] = useState(1);
+  const [revPlan, setRevPlan] = useState(2);
+  const [usePoints, setUsePoints] = useState(true);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => { if (hasXpay) setMethod("xpay"); }, [hasXpay]);
+
+  const pointsVal = loyaltyScanned && usePoints ? 400 : 0;
+  const finalAmount = TOTAL_AMOUNT - pointsVal;
+  const rev = REV_PLANS[revPlan];
+  const revMonthly = Math.ceil(finalAmount / rev.months * (1 + rev.rate / 100));
+  const bnplPer = (finalAmount / BNPL_PLANS[bnplPlan].parts);
+
+  const pay = () => {
+    setLoading(true);
+    const labels = {
+      xpay:      "xPay · карта *8217",
+      bnpl:      `Оплата частями · ${BNPL_PLANS[bnplPlan].label} по ${bnplPer.toLocaleString("ru-RU", {maximumFractionDigits: 0})} ₽`,
+      revolving: `Рассрочка ${REV_PLANS[revPlan].label} · по ${revMonthly.toLocaleString("ru-RU")} ₽/мес`,
+      card:      "Банковская карта",
+    };
+    setTimeout(() => { setLoading(false); onPay(finalAmount, loyaltyScanned ? Math.floor(finalAmount * 0.10) : 0, labels[method]); }, 1800);
+  };
+
+  return (
+    <div style={{ paddingBottom: 16 }}>
+      <div style={{
+        margin: "12px 16px 0", padding: "14px 16px", borderRadius: 16,
+        background: loyaltyScanned ? C.accent : C.cream,
+      }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <span style={{ fontSize: 13, color: C.dark, fontWeight: 600, opacity: 0.75 }}>К оплате</span>
+          <span style={{ fontSize: 24, fontWeight: 800, color: C.dark, letterSpacing: "-0.5px" }} className="num">{finalAmount.toLocaleString("ru-RU")} ₽</span>
+        </div>
+        {loyaltyScanned && (
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 8 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <span style={{ fontSize: 14 }}>★</span>
+              <span style={{ fontSize: 12, color: C.dark, fontWeight: 600 }}>Списать 4 000 баллов restore:club</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <span style={{ fontSize: 12, color: C.dark, fontWeight: 700 }} className="num">−400 ₽</span>
+              <div onClick={() => setUsePoints(!usePoints)} style={{
+                width: 36, height: 22, borderRadius: 11, cursor: "pointer",
+                background: usePoints ? C.dark : "rgba(10,10,10,0.25)", position: "relative", transition: "background .2s"
+              }}>
+                <div style={{
+                  width: 16, height: 16, borderRadius: "50%", background: "#fff",
+                  position: "absolute", top: 3, left: usePoints ? 17 : 3,
+                  transition: "left .2s", boxShadow: "0 1px 3px rgba(0,0,0,0.2)"
+                }}/>
+              </div>
+            </div>
+          </div>
+        )}
+        {loyaltyScanned
+          ? <div style={{ fontSize: 11, color: C.dark, fontWeight: 700, marginTop: 6 }}>+{Math.floor(finalAmount * 0.10).toLocaleString("ru-RU")} ★ начислим после покупки</div>
+          : <div style={{ fontSize: 12, color: C.sub, marginTop: 4 }}>ℹ️ Карта restore:club не отсканирована — бонусы не начислятся</div>
+        }
+      </div>
+      <div style={{ padding: "14px 16px 8px 19px", fontSize: 11, fontWeight: 800, color: C.sub, letterSpacing: 0.8, textTransform: "uppercase" }}>
+        Способ оплаты
+      </div>
+
+      {hasXpay ? (
+        <RadioRow selected={method === "xpay"} onClick={() => setMethod("xpay")}
+          icon="✨" title="xPay restore:" sub="Карта *8217 · МИР" badge="10% кешбэк" badgeAccent/>
+      ) : (
+        <div onClick={onIssue} style={{
+          margin: "0 16px 4px", padding: "16px 18px",
+          background: C.accent, borderRadius: 16, cursor: "pointer", color: C.dark,
+          display: "flex", alignItems: "center", gap: 12,
+          boxShadow: "0 6px 20px rgba(255,92,185,0.4)",
+          position: "relative", overflow: "hidden"
+        }}>
+          <div style={{
+            position: "absolute", top: -20, right: -20, width: 120, height: 120,
+            borderRadius: "50%", background: C.dark, opacity: 0.06
+          }}/>
+          <div style={{
+            width: 46, height: 46, borderRadius: 13, background: C.dark,
+            display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+            position: "relative"
+          }}>
+            <span style={{ fontSize: 22, color: C.accent }}>⚡</span>
+          </div>
+          <div style={{ flex: 1, position: "relative" }}>
+            <div style={{ fontSize: 15, fontWeight: 800, letterSpacing: "-0.3px" }}>Оформить xPay</div>
+            <div style={{ fontSize: 12, marginTop: 2, opacity: 0.75, fontWeight: 600 }}>За 30 секунд · рассрочка 0% сразу</div>
+          </div>
+          <div style={{
+            padding: "6px 11px", borderRadius: 8,
+            background: C.dark, color: C.accent, fontSize: 11, fontWeight: 800,
+            position: "relative", letterSpacing: "0.3px"
+          }}>+10%</div>
+        </div>
+      )}
+      <Divider mx={16}/>
+
+      <RadioRow selected={method === "bnpl"} onClick={() => setMethod("bnpl")}
+        icon="📅" title="Оплата частями" sub={`${BNPL_PLANS[bnplPlan].label} по ${bnplPer.toLocaleString("ru-RU", {maximumFractionDigits: 0})} ₽ · ${BNPL_PLANS[bnplPlan].per}`} badge="Без %" badgeAccent/>
+      {method === "bnpl" && (
+        <div style={{ padding: "0 16px 8px", display: "flex", gap: 8 }}>
+          {BNPL_PLANS.map((p, i) => (
+            <button key={i} onClick={() => setBnplPlan(i)} style={{
+              flex: 1, padding: "9px 0", borderRadius: 10,
+              background: bnplPlan === i ? C.dark : "#fff",
+              color: bnplPlan === i ? C.accent : C.dark,
+              border: bnplPlan === i ? "none" : `1.5px solid ${C.border}`,
+              fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit"
+            }}>{p.label}</button>
+          ))}
+        </div>
+      )}
+      <Divider mx={16}/>
+
+      <RadioRow selected={method === "revolving"} onClick={() => setMethod("revolving")}
+        icon="💎" title={`Рассрочка ${REV_PLANS[revPlan].label}`} sub={`По ${revMonthly.toLocaleString("ru-RU")} ₽/мес · лимит ${CREDIT_LIMIT.toLocaleString("ru-RU")} ₽`} badge={REV_PLANS[revPlan].badge} badgeAccent/>
+      {method === "revolving" && (
+        <div style={{ padding: "0 16px 8px", display: "flex", gap: 6 }}>
+          {REV_PLANS.map((p, i) => (
+            <button key={i} onClick={() => setRevPlan(i)} style={{
+              flex: 1, padding: "9px 0", borderRadius: 10,
+              background: revPlan === i ? C.dark : "#fff",
+              color: revPlan === i ? C.accent : C.dark,
+              border: revPlan === i ? "none" : `1.5px solid ${C.border}`,
+              fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit"
+            }}>{p.label}</button>
+          ))}
+        </div>
+      )}
+      <Divider mx={16}/>
+
+      <RadioRow selected={method === "card"} onClick={() => setMethod("card")}
+        icon="💳" title="Картой другого банка" sub="Visa, Mastercard, МИР"/>
+
+      <div style={{ padding: "16px 16px 0" }}>
+        <PrimaryBtn label={`Оплатить ${finalAmount.toLocaleString("ru-RU")} ₽`} onClick={pay} loading={loading}/>
+        <div style={{ fontSize: 10, color: C.sub, marginTop: 10, textAlign: "center", lineHeight: 1.4 }}>
+          Нажимая «Оплатить», вы соглашаетесь с условиями · {method === "bnpl" || method === "revolving" ? "Кредитор — АО «Альфа-Банк»" : "Платёж защищён"}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ========== APP ========== */
+
+function App() {
+  const [step, setStep] = useState(0);
+  const [mode, setMode] = useState("offline"); // online | offline
+  const [clientType, setClientType] = useState("n2b"); // n2b | existing | has_xpay
+  const [success, setSuccess] = useState(null);
+  const [loyaltyScanned, setLoyaltyScanned] = useState(false);
+  const [issuanceOpen, setIssuanceOpen] = useState(false);
+
+  const hasXpay = clientType === "has_xpay";
+
+  const reset = () => { setStep(0); setSuccess(null); setLoyaltyScanned(false); };
+
+  const stepTitles = ["Корзина", "restore:club", "Оплата"];
+
+  if (success) {
+    return <SuccessScreen {...success} onReset={() => { reset(); setSuccess(null); }}/>;
+  }
+
+  const segments = [
+    { k: "n2b",      l: "Новый" },
+    { k: "existing", l: "Действ." },
+    { k: "has_xpay", l: "С xPay" },
+  ];
+
+  return (
+    <div style={{
+      minHeight: "100vh", background: C.bg, paddingBottom: 12,
+      color: C.dark, display: "flex", flexDirection: "column", alignItems: "center"
+    }}>
+      <div style={{ width: "100%", maxWidth: 400 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", padding: "14px 20px 6px", fontSize: 12, fontWeight: 700, color: C.dark }} className="num">
+          <span>9:41</span>
+          <div style={{ display: "flex", gap: 4 }}>▐▐▐ WiFi 🔋</div>
+        </div>
+
+        <div style={{ padding: "0 12px 8px" }}>
+          <div style={{
+            background: C.dark, borderRadius: 14, padding: "10px 12px",
+            color: "#fff", boxShadow: "0 2px 12px rgba(10,10,10,0.18)",
+            position: "relative", overflow: "hidden"
+          }}>
+            <div style={{
+              position: "absolute", top: -30, right: -20, width: 100, height: 100,
+              borderRadius: "50%", background: C.accent, opacity: 0.08
+            }}/>
+            <div style={{
+              fontSize: 9, fontWeight: 800, letterSpacing: 1.5,
+              textTransform: "uppercase", color: "rgba(255,255,255,0.55)", marginBottom: 7,
+              display: "flex", alignItems: "center", gap: 6, position: "relative"
+            }}>
+              <span style={{
+                width: 14, height: 14, borderRadius: 3, background: C.alfaRed,
+                display: "inline-flex", alignItems: "center", justifyContent: "center",
+                fontSize: 9, fontWeight: 800
+              }}>A</span>
+              Демо CJM · Тип клиента
+            </div>
+            <div style={{ display: "flex", gap: 4, position: "relative" }}>
+              {segments.map(s => (
+                <button key={s.k} onClick={() => { setClientType(s.k); reset(); }} style={{
+                  flex: 1, padding: "8px 6px", borderRadius: 9, border: "none",
+                  background: clientType === s.k ? C.accent : "rgba(255,255,255,0.08)",
+                  color: clientType === s.k ? C.dark : "rgba(255,255,255,0.85)",
+                  fontSize: 12, fontWeight: 700, cursor: "pointer",
+                  fontFamily: "inherit", transition: "all .18s", letterSpacing: "-0.1px"
+                }}>{s.l}</button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div style={{ display: "flex", alignItems: "center", padding: "8px 16px 10px", gap: 12 }}>
+          <button onClick={() => step > 0 ? setStep(step - 1) : null} style={{
+            width: 36, height: 36, borderRadius: "50%", border: "none",
+            background: C.card, cursor: "pointer", fontSize: 18,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            boxShadow: "0 1px 4px rgba(0,0,0,0.06)", color: C.dark
+          }}>←</button>
+          <div style={{ flex: 1, fontSize: 17, fontWeight: 800, color: C.dark, letterSpacing: "-0.4px" }}>
+            {mode === "online" ? "Корзина и оплата" : stepTitles[step]}
+          </div>
+          <RestoreLogo size={22}/>
+        </div>
+
+        <div style={{ padding: "0 16px 12px" }}>
+          <div style={{
+            display: "flex", gap: 4, background: C.card, borderRadius: 14, padding: 4,
+            boxShadow: "0 1px 4px rgba(0,0,0,0.05)"
+          }}>
+            {[{ k: "online", l: "🌐 Онлайн" }, { k: "offline", l: "🏪 Магазин" }].map(m => (
+              <button key={m.k} onClick={() => { setMode(m.k); setStep(0); }} style={{
+                flex: 1, padding: "8px 0", borderRadius: 11, border: "none",
+                background: mode === m.k ? C.accent : "transparent",
+                color: mode === m.k ? C.dark : C.sub,
+                fontSize: 13, fontWeight: 700, cursor: "pointer",
+                transition: "all .2s", fontFamily: "inherit"
+              }}>{m.l}</button>
+            ))}
+          </div>
+        </div>
+
+        <div style={{
+          background: C.card, borderRadius: 22, margin: "0 12px",
+          boxShadow: "0 2px 20px rgba(10,10,10,0.06)", overflow: "hidden"
+        }}>
+          <div style={{ height: 5, background: C.accent }}/>
+          <div style={{
+            display: "flex", alignItems: "center", gap: 12, padding: "14px 16px 12px",
+            borderBottom: `1px solid ${C.border}`
+          }}>
+            <div style={{
+              width: 44, height: 44, borderRadius: 12, background: C.dark,
+              display: "flex", alignItems: "center", justifyContent: "center"
+            }}>
+              <RestoreLogo size={18} color={C.accent}/>
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 15, fontWeight: 800, color: C.dark, letterSpacing: "-0.3px" }}>restore:</div>
+              <div style={{ fontSize: 12, color: C.sub }}>
+                {mode === "offline" ? "ТЦ Афимолл · касса №3" : "re-store.ru · заказ #38219"}
+              </div>
+            </div>
+            <div style={{ fontSize: 20, fontWeight: 800, color: C.dark, letterSpacing: "-0.4px" }} className="num">{TOTAL_AMOUNT.toLocaleString("ru-RU")} ₽</div>
+          </div>
+
+          {mode === "offline" && (
+            <div style={{ padding: "16px 16px 4px" }}>
+              <StepBar step={step}/>
+            </div>
+          )}
+
+          {mode === "offline" && step === 0 && <Step1 onNext={() => setStep(1)}/>}
+          {mode === "offline" && step === 1 && (
+            <Step2 onNext={() => { setLoyaltyScanned(true); setStep(2); }}/>
+          )}
+          {mode === "offline" && step === 2 && (
+            <Step3 loyaltyScanned={loyaltyScanned} hasXpay={hasXpay}
+              onPay={(a, b, m) => setSuccess({ amount: a, bonuses: b, method: m })}
+              onIssue={() => setIssuanceOpen(true)}/>
+          )}
+          {mode === "online" && (
+            <>
+              <OnlineCart/>
+              <Step3 loyaltyScanned={true} hasXpay={hasXpay}
+                onPay={(a, b, m) => setSuccess({ amount: a, bonuses: b, method: m })}
+                onIssue={() => setIssuanceOpen(true)}/>
+            </>
+          )}
+        </div>
+
+        <div style={{ padding: "16px 0 40px", textAlign: "center" }}>
+          <span style={{ fontSize: 11, color: C.sub }}>🔒 Защищено · PCI DSS · Альфа-Банк</span>
+        </div>
+      </div>
+
+      {issuanceOpen && (
+        <CardIssuanceModal
+          clientType={clientType === "has_xpay" ? "n2b" : clientType}
+          onClose={() => setIssuanceOpen(false)}
+          onComplete={() => { setIssuanceOpen(false); setClientType("has_xpay"); }}
+        />
+      )}
+    </div>
+  );
+}
+
+ReactDOM.render(<App/>, document.getElementById('root'));
+</script>
+</body>
+</html>
