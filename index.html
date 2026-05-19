@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>restore: × xPay — Чек-аут с Альфа-Банком</title>
-<meta name="description" content="Интерактивный прототип чек-аута restore: с xPay: оплата, частями, рассрочка и оформление карты через Альфа-Банк">
-<meta property="og:title" content="restore: × xPay — Чек-аут с Альфа-Банком">
-<meta property="og:description" content="Интерактивный прототип партнёрской интеграции xPay в restore:">
+<title>restore-pay — Чек-аут с Альфа-Банком</title>
+<meta name="description" content="Интерактивный прототип чек-аута restore-pay: оплата, частями, рассрочка и оформление карты через Альфа-Банк">
+<meta property="og:title" content="restore-pay — Чек-аут с Альфа-Банком">
+<meta property="og:description" content="Интерактивный прототип партнёрского кошелька restore-pay">
 <meta property="og:type" content="website">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%230A0A0A'/><text x='50%25' y='62%25' text-anchor='middle' fill='%23FF5CB9' font-size='14' font-weight='800' font-family='Arial' letter-spacing='-1'>r:</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -75,8 +75,7 @@ function XpayCardSvg({ width = 200, last = "8217" }) {
       <line x1="14" y1="51" x2="42" y2="51" stroke="#444" strokeWidth="1"/>
       <line x1="28" y1="40" x2="28" y2="62" stroke="#444" strokeWidth="1"/>
       {/* brand */}
-      <text x="14" y="82" fill="#fff" fontSize="13" fontWeight="800" fontFamily="Inter, sans-serif" letterSpacing="-0.3">restore:</text>
-      <text x="14" y="96" fill={C.accent} fontSize="9" fontWeight="700" fontFamily="Inter, sans-serif" letterSpacing="2">xPAY</text>
+      <text x="14" y="88" fill="#fff" fontSize="14" fontWeight="800" fontFamily="Inter, sans-serif" letterSpacing="-0.3">restore-pay</text>
       <text x="14" y="112" fill="rgba(255,255,255,0.7)" fontSize="10" fontFamily="monospace" fontWeight="600" letterSpacing="1.5">*{last}</text>
       {/* МИР badge */}
       <rect x="148" y="92" width="38" height="18" rx="4" fill="#fff"/>
@@ -327,7 +326,7 @@ function IssueHeader({ onClose, label }) {
         color: C.dark, fontWeight: 700
       }}>✕</button>
       <div style={{ flex: 1 }}>
-        <div style={{ fontSize: 14, fontWeight: 800, color: C.dark, letterSpacing: "-0.2px" }}>Оформление xPay</div>
+        <div style={{ fontSize: 14, fontWeight: 800, color: C.dark, letterSpacing: "-0.2px" }}>Оформление restore-pay</div>
         <div style={{ fontSize: 11, color: C.sub, display: "flex", alignItems: "center", gap: 5, marginTop: 2 }}>
           <span style={{
             width: 14, height: 14, borderRadius: 3, background: C.alfaRed,
@@ -368,7 +367,7 @@ function ConsentsScreen({ onNext, clientType }) {
       }}>
         <span style={{ fontSize: 30 }}>✨</span>
       </div>
-      <div style={{ fontSize: 24, fontWeight: 800, lineHeight: 1.15, marginBottom: 8, color: C.dark, letterSpacing: "-0.6px" }}>Платите xPay в restore:</div>
+      <div style={{ fontSize: 24, fontWeight: 800, lineHeight: 1.15, marginBottom: 8, color: C.dark, letterSpacing: "-0.6px" }}>Платите с restore-pay</div>
       <div style={{ fontSize: 13, color: C.sub, marginBottom: 16, lineHeight: 1.5 }}>
         {clientType === "existing"
           ? "Привяжите карту Альфа-Банка и платите с рассрочкой 0% и кешбэком"
@@ -529,7 +528,7 @@ function IssuedScreen({ onNext }) {
       }}>
         <CheckIcon size={34} color={C.dark}/>
       </div>
-      <div style={{ fontSize: 22, fontWeight: 800, marginBottom: 8, color: C.dark, letterSpacing: "-0.5px" }}>xPay выпущена!</div>
+      <div style={{ fontSize: 22, fontWeight: 800, marginBottom: 8, color: C.dark, letterSpacing: "-0.5px" }}>restore-pay выпущена!</div>
       <div style={{ fontSize: 13, color: C.sub, marginBottom: 20, lineHeight: 1.5 }}>
         Карта готова к оплате. Все данные переданы на чек-аут restore: автоматически.
       </div>
@@ -539,7 +538,7 @@ function IssuedScreen({ onNext }) {
       }}>
         <XpayCardSvg width={92}/>
         <div style={{ textAlign: "left" }}>
-          <div style={{ fontSize: 14, fontWeight: 800, color: C.dark }}>xPay restore:</div>
+          <div style={{ fontSize: 14, fontWeight: 800, color: C.dark }}>restore-pay</div>
           <div style={{ fontSize: 11, color: C.sub, marginTop: 2 }}>*8217 · МИР · Баланс 0 ₽</div>
           <div style={{
             fontSize: 10, fontWeight: 800, color: C.dark, marginTop: 5,
@@ -573,7 +572,7 @@ function SelectAlfaCardScreen({ onNext }) {
   return (
     <div style={{ padding: "20px 16px" }}>
       <div style={{ fontSize: 22, fontWeight: 800, marginBottom: 8, color: C.dark, letterSpacing: "-0.5px" }}>Выберите карту</div>
-      <div style={{ fontSize: 13, color: C.sub, marginBottom: 16 }}>Привяжем её к xPay для покупок в restore:</div>
+      <div style={{ fontSize: 13, color: C.sub, marginBottom: 16 }}>Привяжем её к restore-pay для покупок со скидкой</div>
       {cards.map((c, i) => (
         <div key={i} onClick={() => setSel(i)} style={{
           display: "flex", alignItems: "center", gap: 12,
@@ -598,7 +597,7 @@ function SelectAlfaCardScreen({ onNext }) {
         </div>
       ))}
       <div style={{ marginTop: 14 }}>
-        <PrimaryBtn label="Привязать к xPay" onClick={onNext}/>
+        <PrimaryBtn label="Привязать к restore-pay" onClick={onNext}/>
       </div>
     </div>
   );
@@ -708,7 +707,7 @@ function TopupScreen({ onNext, onSkip }) {
       }}>
         <XpayCardSvg width={58}/>
         <div>
-          <div style={{ fontSize: 13, fontWeight: 800, color: C.dark }}>xPay *8217</div>
+          <div style={{ fontSize: 13, fontWeight: 800, color: C.dark }}>restore-pay *8217</div>
           <div style={{ fontSize: 11, color: C.sub, marginTop: 2 }}>Баланс: 0 ₽</div>
         </div>
       </div>
@@ -856,7 +855,7 @@ function DeliveredScreen({ onNext }) {
       </div>
       <div style={{ fontSize: 22, fontWeight: 800, color: C.dark, marginBottom: 8, letterSpacing: "-0.5px" }}>Заказ оформлен!</div>
       <div style={{ fontSize: 13, color: C.sub, marginBottom: 20, lineHeight: 1.5 }}>
-        Пластиковая карта приедет завтра.<br/>А пока можно платить цифровой картой xPay.
+        Пластиковая карта приедет завтра.<br/>А пока можно платить цифровой картой restore-pay.
       </div>
       <PrimaryBtn label="Перейти к оплате" onClick={onNext}/>
     </div>
@@ -1026,7 +1025,7 @@ function Step2({ onNext }) {
       <div style={{ padding: "14px 16px 12px", display: "flex", alignItems: "center", gap: 14 }}>
         <XpayCardSvg width={88}/>
         <div>
-          <div style={{ fontSize: 14, fontWeight: 800, color: C.dark, letterSpacing: "-0.2px" }}>xPay restore:</div>
+          <div style={{ fontSize: 14, fontWeight: 800, color: C.dark, letterSpacing: "-0.2px" }}>restore-pay</div>
           <div style={{ fontSize: 12, color: C.sub, marginTop: 2 }} className="num">*8217 · Баланс 15 200 ₽</div>
           <div style={{ fontSize: 12, marginTop: 3, display: "flex", alignItems: "center", gap: 5 }}>
             <span style={{ color: C.dark, fontWeight: 700 }}>★ 4 000 баллов</span>
@@ -1124,14 +1123,14 @@ const REV_PLANS = [
 ];
 const CREDIT_LIMIT = 100000;
 
-function Step3({ loyaltyScanned, hasXpay, onPay, onIssue }) {
-  const [method, setMethod] = useState(hasXpay ? "xpay" : "card");
+function Step3({ loyaltyScanned, hasCard, onPay, onIssue }) {
+  const [method, setMethod] = useState(hasCard ? "xpay" : "card");
   const [bnplPlan, setBnplPlan] = useState(1);
   const [revPlan, setRevPlan] = useState(2);
   const [usePoints, setUsePoints] = useState(true);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => { if (hasXpay) setMethod("xpay"); }, [hasXpay]);
+  useEffect(() => { if (hasCard) setMethod("xpay"); }, [hasCard]);
 
   const pointsVal = loyaltyScanned && usePoints ? 400 : 0;
   const finalAmount = TOTAL_AMOUNT - pointsVal;
@@ -1142,7 +1141,7 @@ function Step3({ loyaltyScanned, hasXpay, onPay, onIssue }) {
   const pay = () => {
     setLoading(true);
     const labels = {
-      xpay:      "xPay · карта *8217",
+      xpay:      "restore-pay · карта *8217",
       bnpl:      `Оплата частями · ${BNPL_PLANS[bnplPlan].label} по ${bnplPer.toLocaleString("ru-RU", {maximumFractionDigits: 0})} ₽`,
       revolving: `Рассрочка ${REV_PLANS[revPlan].label} · по ${revMonthly.toLocaleString("ru-RU")} ₽/мес`,
       card:      "Банковская карта",
@@ -1190,9 +1189,9 @@ function Step3({ loyaltyScanned, hasXpay, onPay, onIssue }) {
         Способ оплаты
       </div>
 
-      {hasXpay ? (
+      {hasCard ? (
         <RadioRow selected={method === "xpay"} onClick={() => setMethod("xpay")}
-          icon="✨" title="xPay restore:" sub="Карта *8217 · МИР" badge="10% кешбэк" badgeAccent/>
+          icon="✨" title="restore-pay" sub="Карта *8217 · МИР" badge="10% кешбэк" badgeAccent/>
       ) : (
         <div onClick={onIssue} style={{
           margin: "0 16px 4px", padding: "16px 18px",
@@ -1213,7 +1212,7 @@ function Step3({ loyaltyScanned, hasXpay, onPay, onIssue }) {
             <span style={{ fontSize: 22, color: C.accent }}>⚡</span>
           </div>
           <div style={{ flex: 1, position: "relative" }}>
-            <div style={{ fontSize: 15, fontWeight: 800, letterSpacing: "-0.3px" }}>Оформить xPay</div>
+            <div style={{ fontSize: 15, fontWeight: 800, letterSpacing: "-0.3px" }}>Оформить restore-pay</div>
             <div style={{ fontSize: 12, marginTop: 2, opacity: 0.75, fontWeight: 600 }}>За 30 секунд · рассрочка 0% сразу</div>
           </div>
           <div style={{
@@ -1282,7 +1281,7 @@ function App() {
   const [loyaltyScanned, setLoyaltyScanned] = useState(false);
   const [issuanceOpen, setIssuanceOpen] = useState(false);
 
-  const hasXpay = clientType === "has_xpay";
+  const hasCard = clientType === "has_xpay";
 
   const reset = () => { setStep(0); setSuccess(null); setLoyaltyScanned(false); };
 
@@ -1295,7 +1294,7 @@ function App() {
   const segments = [
     { k: "n2b",      l: "Новый" },
     { k: "existing", l: "Действ." },
-    { k: "has_xpay", l: "С xPay" },
+    { k: "has_xpay", l: "С restore-pay" },
   ];
 
   return (
@@ -1410,14 +1409,14 @@ function App() {
             <Step2 onNext={() => { setLoyaltyScanned(true); setStep(2); }}/>
           )}
           {mode === "offline" && step === 2 && (
-            <Step3 loyaltyScanned={loyaltyScanned} hasXpay={hasXpay}
+            <Step3 loyaltyScanned={loyaltyScanned} hasCard={hasCard}
               onPay={(a, b, m) => setSuccess({ amount: a, bonuses: b, method: m })}
               onIssue={() => setIssuanceOpen(true)}/>
           )}
           {mode === "online" && (
             <>
               <OnlineCart/>
-              <Step3 loyaltyScanned={true} hasXpay={hasXpay}
+              <Step3 loyaltyScanned={true} hasCard={hasCard}
                 onPay={(a, b, m) => setSuccess({ amount: a, bonuses: b, method: m })}
                 onIssue={() => setIssuanceOpen(true)}/>
             </>
